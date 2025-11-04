@@ -12,8 +12,8 @@ type model struct {
 	cursor   int
 	selected map[int]struct{}
 
-	WorldMap      components.WorldMapModel
-	StationSearch components.StationSearchModel
+	WorldMap              components.WorldMapModel
+	InteractionsContainer components.InteractionsContainerModel
 
 	width  int
 	height int
@@ -21,8 +21,8 @@ type model struct {
 
 func InitialModel() model {
 	return model{
-		WorldMap:      components.WorldMap(""),
-		StationSearch: components.StationSearch(""),
+		WorldMap:              components.WorldMap(""),
+		InteractionsContainer: components.InteractionsContainer(""),
 	}
 }
 
@@ -46,8 +46,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	newStationSearchModel, stationSearchCmd := m.StationSearch.Update(msg)
-	m.StationSearch = newStationSearchModel.(components.StationSearchModel)
+	newStationSearchModel, stationSearchCmd := m.InteractionsContainer.Update(msg)
+	m.InteractionsContainer = newStationSearchModel.(components.InteractionsContainerModel)
 	cmds = append(cmds, stationSearchCmd)
 
 	return m, tea.Batch(cmds...)
@@ -57,7 +57,7 @@ func (m model) View() string {
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
 		lipgloss.JoinVertical(lipgloss.Center,
 			m.WorldMap.View(),
-			m.StationSearch.View(),
+			m.InteractionsContainer.View(),
 		),
 	)
 }

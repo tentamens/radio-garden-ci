@@ -2,10 +2,10 @@ package components
 
 import (
 	"log"
-	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"thomasjgriffin.dev/radio-garden-cli/internals/helpers"
 )
 
 type WorldMapModel struct {
@@ -14,20 +14,16 @@ type WorldMapModel struct {
 }
 
 func WorldMap(intialContent string) WorldMapModel {
-	asciiMapBytes, err := os.ReadFile("assets/worldMaps/defaultWorldMap.txt")
+	worldMapText, err := helpers.LoadTextFile("assets/worldMaps/defaultWorldMap.txt")
 	if err != nil {
 		log.Fatalf("could not read map file: %v", err)
 	}
 
-	asciiMap := string(asciiMapBytes)
-
 	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("8")).
 		Padding(1, 1)
 
 	return WorldMapModel{
-		Content: asciiMap,
+		Content: worldMapText,
 		Style:   style,
 	}
 }

@@ -15,7 +15,7 @@ type StationSearchModel struct {
 func StationSearch(intialContent string) StationSearchModel {
 	style := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("8")).Width(40)
+		BorderForeground(lipgloss.Color("8")).Width(34)
 
 	ti := textinput.New()
 	ti.Placeholder = "Search Station"

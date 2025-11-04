@@ -8,16 +8,13 @@ import (
 type MediaButtonModel struct {
 	Content string
 	Style   lipgloss.Style
-
-	MediaButtonSkip MediaControlsModel
 }
 
 func MediaButton(mediaButtonString string) MediaButtonModel {
 	style := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("8")).
-		Padding(1, 1)
-
+		BorderForeground(lipgloss.Color("8")).Padding(0, 2).
+		Margin(0, 1)
 	return MediaButtonModel{
 		Content: mediaButtonString,
 		Style:   style,
@@ -33,6 +30,7 @@ func (m MediaButtonModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MediaButtonModel) View() string {
+	// remove last line of string
 	content := m.Content
 	return m.Style.Render(content)
 }

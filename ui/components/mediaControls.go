@@ -1,34 +1,29 @@
 package components
 
 import (
-	"log"
-	"os"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"thomasjgriffin.dev/radio-garden-cli/internals/helpers"
 )
 
 type MediaControlsModel struct {
 	Content string
 	Style   lipgloss.Style
+
+	MediaPauseButton  MediaButtonModel
+	MediaNextButton   MediaButtonModel
+	MediaRandomButton MediaButtonModel
 }
 
 func MediaControls(intialContent string) MediaControlsModel {
-	asciiMapBytes, err := os.ReadFile("assets/worldMaps/defaultWorldMap.txt")
-	if err != nil {
-		log.Fatalf("could not read map file: %v", err)
-	}
-
-	asciiMap := string(asciiMapBytes)
-
-	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("8")).
-		Padding(1, 1)
+	arrowText, _ := helpers.LoadTextFile("assets/components/arrow.txt")
+	pauseText, _ := helpers.LoadTextFile("assets/components/pausePlay.txt")
+	randmonIconText, _ := helpers.LoadTextFile("assets/components/random.txt")
 
 	return MediaControlsModel{
-		Content: asciiMap,
-		Style:   style,
+		MediaPauseButton:  MediaButton(pauseText),
+		MediaNextButton:   MediaButton(arrowText),
+		MediaRandomButton: MediaButton(randmonIconText),
 	}
 }
 
@@ -44,8 +39,11 @@ func (m MediaControlsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m MediaControlsModel) View() string {
 	// Render the content, then wrap it in the box style
 
-	style := lipgloss.JoinHorizontal(lipgloss.Center)
-
-	content := m.Content
+	style := lipgloss.JoinHorizontal(lipgloss.Center,
+		m.MediaRandomButton.View(),
+		m.MediaPauseButton.View(),
+		m.MediaNextButton.View(),
+	)
+	content := style
 	return m.Style.Render(content)
 }
