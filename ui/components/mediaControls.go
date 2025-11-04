@@ -43,6 +43,9 @@ func (m MediaControlsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MediaControlsModel) View() string {
 	// Render the content, then wrap it in the box style
+
+	style := lipgloss.JoinHorizontal(lipgloss.Center)
+
 	content := m.Content
 	return m.Style.Render(content)
 }
