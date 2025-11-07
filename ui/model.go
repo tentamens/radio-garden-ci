@@ -3,7 +3,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -16,12 +15,15 @@ type model struct {
 	cursor   int
 	selected map[int]struct{}
 
-	WorldMap              components.WorldMapModel
-	InteractionsContainer components.InteractionsContainerModel
+	WorldMap                components.WorldMapModel
+	InteractionsContainer   components.InteractionsContainerModel
+	StationDetailsComponent components.StationDetailsComponentModel
 
-	width   int
-	height  int
-	placeID string
+	width          int
+	height         int
+	placeID        string
+	stationID      string
+	stationDetails helpers.StationDetails
 
 	cancelStream context.CancelFunc
 }
@@ -31,9 +33,11 @@ func InitialModel() model {
 	helpers.InitClient()
 
 	return model{
-		WorldMap:              components.WorldMap(""),
-		InteractionsContainer: components.InteractionsContainer(""),
-		placeID:               "p6yf8OtF",
+		WorldMap:                components.WorldMap(""),
+		InteractionsContainer:   components.InteractionsContainer(""),
+		StationDetailsComponent: components.StationDetailsComponent(""),
+		placeID:                 "p6yf8OtF",
+		stationID:               "",
 	}
 }
 
@@ -67,7 +71,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			m.cancelStream = cancel
 
-			return m, helpers.StreamMusic(m.placeID, ctx)
+			return m, helpers.StreamMusic(m.stationID, ctx)
 
 		// cancel the stream
 		case "p":
@@ -79,19 +83,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "t":
-			stirng, err := helpers.PickStation(context.Background(), m.placeID)
-			fmt.Println(stirng, err)
 
 		case "r":
 			m.placeID = helpers.PickRandonPlace()
-			return m, nil
+			stationID, err := helpers.PickStation(context.Background(), m.placeID)
+			if err != nil {
+				return m, nil
+			}
+			m.stationID = stationID
+			m.stationDetails, err = helpers.GetStationDetails(m.stationID)
+			if err != nil {
+				return m, nil
+			}
+
+			updateCmd := func() tea.Msg {
+				return components.NewStationDetailsMsg(m.stationDetails)
+			}
+
+			cmds = append(cmds, updateCmd)
 
 		}
 	}
 
 	newStationSearchModel, stationSearchCmd := m.InteractionsContainer.Update(msg)
 	m.InteractionsContainer = newStationSearchModel.(components.InteractionsContainerModel)
-	cmds = append(cmds, stationSearchCmd)
+	newStationDetailsModel, stationDetailsCmd := m.StationDetailsComponent.Update(msg)
+	m.StationDetailsComponent = newStationDetailsModel.(components.StationDetailsComponentModel)
+
+	cmds = append(cmds, stationSearchCmd, stationDetailsCmd)
 
 	return m, tea.Batch(cmds...)
 }
@@ -100,7 +119,10 @@ func (m model) View() string {
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
 		lipgloss.JoinVertical(lipgloss.Center,
 			m.WorldMap.View(),
-			m.InteractionsContainer.View(),
+			lipgloss.JoinHorizontal(lipgloss.Center,
+				m.InteractionsContainer.View(),
+				m.StationDetailsComponent.View(),
+			),
 		),
 	)
 }

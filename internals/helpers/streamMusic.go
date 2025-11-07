@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"time"
 
 	// Add time for speaker initialization if you use gopxl/beep/speaker
 	// REPLACE "github.com/gopxl/beep/mp3"
@@ -91,8 +92,19 @@ func StreamMusic(stationID string, ctx context.Context) tea.Cmd {
 		}()
 
 		const (
-			sampleRate   = 44100
-			channelCount = 2
+			sampleRate     = 44100
+			channelCount   = 2
+			bytesPerSample = 2
+			targetDuration = 50 * time.Millisecond // 0.05 seconds
+		)
+
+		processReader := NewProcessorReader(
+			stdoutPipe,
+			targetDuration,
+			sampleRate,
+			channelCount,
+			bytesPerSample,
+			processPCMChunk,
 		)
 
 		op := &oto.NewContextOptions{
@@ -107,7 +119,7 @@ func StreamMusic(stationID string, ctx context.Context) tea.Cmd {
 		}
 		<-ready // Wait for the audio context to be ready
 
-		player := otoCtx.NewPlayer(stdoutPipe)
+		player := otoCtx.NewPlayer(processReader)
 		player.SetVolume(0.3)
 		player.Play()
 		<-ctx.Done()
@@ -134,4 +146,8 @@ func (p pcm16) Write(buf []byte) (int, error) {
 		p[i] = int16(buf[i*2]) | int16(buf[i*2+1])<<8
 	}
 	return len(buf), nil
+}
+
+func processPCMChunk(chunk []byte) {
+	fmt.Println("processing chunk")
 }
