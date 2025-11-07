@@ -31,12 +31,19 @@ func (m InteractionsContainerModel) Init() tea.Cmd {
 }
 
 func (m InteractionsContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Non-interactive, so it just returns itself
-	return m, nil
+	var cmds []tea.Cmd
+
+	newStationSearchModel, stationSearchCmd := m.StationSearch.Update(msg)
+
+	m.StationSearch = newStationSearchModel.(StationSearchModel)
+	cmds = append(cmds, stationSearchCmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m InteractionsContainerModel) View() string {
 	// Render the content, then wrap it in the box style
+
 	content := lipgloss.NewStyle().Margin(0, 2).Render(
 		lipgloss.JoinVertical(lipgloss.Center,
 			m.StationSearch.View(),
