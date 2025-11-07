@@ -19,8 +19,9 @@ type model struct {
 	WorldMap              components.WorldMapModel
 	InteractionsContainer components.InteractionsContainerModel
 
-	width  int
-	height int
+	width   int
+	height  int
+	placeID string
 
 	cancelStream context.CancelFunc
 }
@@ -32,6 +33,7 @@ func InitialModel() model {
 	return model{
 		WorldMap:              components.WorldMap(""),
 		InteractionsContainer: components.InteractionsContainer(""),
+		placeID:               "p6yf8OtF",
 	}
 }
 
@@ -65,12 +67,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			m.cancelStream = cancel
 
-			return m, helpers.StreamMusic("AHWRUh8V", ctx)
+			return m, helpers.StreamMusic(m.placeID, ctx)
 
 		// cancel the stream
 		case "p":
 			if m.cancelStream != nil {
-				fmt.Println("cancling stream")
 				m.cancelStream()
 				m.cancelStream = nil
 			}
@@ -78,9 +79,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "t":
-			fmt.Println(helpers.PickRandonStation(), " random station picked")
-		}
+			stirng, err := helpers.PickStation(context.Background(), m.placeID)
+			fmt.Println(stirng, err)
 
+		case "r":
+			m.placeID = helpers.PickRandonPlace()
+			return m, nil
+
+		}
 	}
 
 	newStationSearchModel, stationSearchCmd := m.InteractionsContainer.Update(msg)

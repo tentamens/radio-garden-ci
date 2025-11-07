@@ -1,10 +1,13 @@
 package helpers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -19,7 +22,7 @@ type Location struct {
 	Country string    `json:"country"`
 }
 
-func PickRandonStation() string {
+func PickRandonPlace() string {
 	const filePath = "assets/caches/locationCache.json"
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -50,4 +53,63 @@ func PickRandonStation() string {
 	urlCode := splitURL[len(splitURL)-1]
 
 	return urlCode
+}
+
+func PickStation(ctx context.Context, stationID string) (string, error) {
+	resp, err := http.Get("https://radio.garden/api/ara/content/page/" + stationID)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer resp.Body.Close()
+
+	// 3. Read the entire body content into a byte slice
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+		return "", fmt.Errorf("failed to unmarshal root object: %w", err)
+	}
+
+	// 2. Access 'content' (array) and assert its type
+	content, ok := result["content"].([]interface{})
+	if !ok || len(content) == 0 {
+		return "", fmt.Errorf("content not found or is empty")
+	}
+
+	// 3. Access first item of 'content' (object) and assert its type
+	firstSection, ok := content[0].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("first section is not an object")
+	}
+
+	// 4. Access 'items' (array) and assert its type
+	items, ok := firstSection["items"].([]interface{})
+	if !ok || len(items) == 0 {
+		return "", fmt.Errorf("items array not found or is empty")
+	}
+
+	// 5. Access first item of 'items' (object) and assert its type
+	firstItem, ok := items[0].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("first item is not an object")
+	}
+
+	// 6. Access 'page' (object) and assert its type
+	page, ok := firstItem["page"].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("page object not found")
+	}
+
+	// 7. Access 'stream' (string) and assert its type
+	streamURL, ok := page["stream"].(string)
+	if !ok {
+		return "", fmt.Errorf("stream URL not found or is not a string")
+	} // 5. Print or return the actual content
+	fmt.Println(streamURL)
+
+	return "", nil
 }

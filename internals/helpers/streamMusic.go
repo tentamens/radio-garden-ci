@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -25,6 +26,8 @@ type StreamStoppedMsg struct{}
 func StreamMusic(stationID string, ctx context.Context) tea.Cmd {
 	return func() tea.Msg {
 		audioURL := "https://radio.garden/api/ara/content/listen/" + stationID + "/channel.mp3"
+
+		fmt.Println(stationID)
 
 		// 1. Make the HTTP GET request.
 		req, err := http.NewRequestWithContext(ctx, "GET", audioURL, nil)
@@ -105,7 +108,7 @@ func StreamMusic(stationID string, ctx context.Context) tea.Cmd {
 		<-ready // Wait for the audio context to be ready
 
 		player := otoCtx.NewPlayer(stdoutPipe)
-		player.SetVolume(0.1)
+		player.SetVolume(0.3)
 		player.Play()
 		<-ctx.Done()
 
